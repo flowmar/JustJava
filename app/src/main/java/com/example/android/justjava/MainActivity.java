@@ -9,18 +9,23 @@
 package com.example.android.justjava;
 
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * This app displays an order form to order coffee.
  */
 public class MainActivity extends AppCompatActivity {
 
-    public int quantity = 0;
+    public int quantity = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +40,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void submitOrder(View view) {
+
+        EditText nameInput = (EditText) findViewById(R.id.name_input);
+        String name = nameInput.getText().toString();
+
         CheckBox whippedCream = (CheckBox) findViewById(R.id.whipped_cream);
         CheckBox chocolate = (CheckBox) findViewById(R.id.chocolate_checkbox);
         boolean hasWhippedCream = whippedCream.isChecked();
@@ -42,18 +51,46 @@ public class MainActivity extends AppCompatActivity {
 
 
         int price = calculatePrice(quantity, hasWhippedCream, hasChocolate);
-        String priceMessage = createOrderSummary(hasWhippedCream, hasChocolate, quantity, price);
-        displayMessage(priceMessage);
+        String priceMessage = createOrderSummary(name, hasWhippedCream, hasChocolate, quantity, price);
+//        displayMessage(priceMessage);
+
+        String subject = "Just Java Order Summary for: " + name;
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:"));
+        intent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        intent.putExtra(Intent.EXTRA_TEXT, priceMessage);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 
     public void increment(View view) {
-        quantity = quantity + 1;
-        displayQuantity(quantity);
+        Context context = getApplicationContext();
+        CharSequence text = "You cannot order more than 100 cups of coffee.";
+        int duration = Toast.LENGTH_SHORT;
+
+        if (quantity == 100) {
+            Toast.makeText(context, text, duration).show();
+            return;
+        } else {
+            quantity = quantity + 1;
+            displayQuantity(quantity);
+        }
     }
 
     public void decrement(View view) {
-        quantity = quantity - 1;
-        displayQuantity(quantity);
+        Context context = getApplicationContext();
+        CharSequence text = "You cannot order less than 1 cup of coffee.";
+        int duration = Toast.LENGTH_SHORT;
+
+
+        if (quantity == 1){
+            Toast.makeText(context, text, duration).show();
+            return;
+        } else {
+            quantity = quantity - 1;
+            displayQuantity(quantity);
+        }
     }
 
     /**
@@ -68,10 +105,10 @@ public class MainActivity extends AppCompatActivity {
     /**
      * This method displays the given text on the screen.
      */
-    private void displayMessage(String message) {
-        TextView orderSummaryTextView = (TextView) findViewById(R.id.order_summary_text_view);
-        orderSummaryTextView.setText(message);
-    }
+//    private void displayMessage(String message) {
+//        TextView orderSummaryTextView = (TextView) findViewById(R.id.order_summary_text_view);
+//        orderSummaryTextView.setText(message);
+//    }
 
     /**
      * Calculates the price of the order.
@@ -85,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
             price += 1 * quantity;
         };
         if (hasChocolate == true){
-            price += 1 * quantity;
+            price += 2 * quantity;
         }
         return price;
     }
@@ -99,8 +136,8 @@ public class MainActivity extends AppCompatActivity {
      * @return a summary of the order
      */
 
-    private String createOrderSummary(boolean hasWhippedCream, boolean hasChocolate, int quantity, int price) {
-        String orderSummary = "Name: Kaptain Kunal\n Add Whipped Cream?: " + hasWhippedCream + "\nAdd Chocolate?: " + hasChocolate + "\nQuantity: " + quantity + "\nTotal: " + price + "\nThank you!";
+    private String createOrderSummary(String name, boolean hasWhippedCream, boolean hasChocolate, int quantity, int price) {
+        String orderSummary = getString(R.string.order_summary_name, name) + "\n" + getString(R.string.order_summary_whipped_cream) + " " + hasWhippedCream + "\n" + getString(R.string.order_summary_chocolate) + " " + hasChocolate + "\n" + getString(R.string.order_summary_quantity) + " " + quantity + "\n" + getString(R.string.order_summary_price) + " " + price + "\n" + getString(R.string.thank_you);
         return orderSummary;
     }
 }
